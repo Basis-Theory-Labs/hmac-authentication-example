@@ -34,7 +34,7 @@ Follow the steps below to create a new Proxy:
     terraform apply
     ```
 
-Using the outputs from Terraform, you can make a request to dLocal to [save a card](https://docs.dlocal.com/reference/create-a-card):
+Using the outputs from Terraform, you can make a request to dLocal to [save a card](https://docs.dlocal.com/reference/create-a-card) using an existing token (e.g., `dca501d0-993d-4e8f-a6aa-219e3a531746`):
 
 ```curl
 curl -L 'https://api.basistheory.com/proxy/secure_cards' \

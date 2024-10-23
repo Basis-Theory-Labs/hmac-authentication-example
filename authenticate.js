@@ -33,17 +33,13 @@ module.exports = async (req) => {
 
     const signature = calculateSignature(xLogin, date, secretKey, jsonBody);
 
-    const req2 = {
+    return {
       body: jsonBody,
       headers: {
         ...headers,
         Authorization: signature,
       },
     };
-
-    console.log(req2);
-
-    return req2;
   } catch (error) {
     throw new CustomHttpResponseError({
       status: 500,
