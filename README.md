@@ -34,13 +34,32 @@ Follow the steps below to create a new Proxy:
     terraform apply
     ```
 
-Using the outputs from Terraform, you can make a request to the Proxy:
+Using the outputs from Terraform, you can make a request to dLocal to [save a card](https://docs.dlocal.com/reference/create-a-card):
 
 ```curl
-curl -L 'https://api.basistheory.com/proxy?bt-proxy-key={dlocal_proxy_key}' \
--H 'BT-API-KEY: {backend_application_key}' \
+curl -L 'https://api.basistheory.com/proxy/secure_cards' \
+-H 'X-Login: 123456789' \
+-H 'X-Trans-Key: 123456789a' \
+-H 'X-Version: 2.1' \
+-H 'X-Date: 2024-10-22T20:08:49.744Z' \
+-H 'BT-PROXY-KEY: {dlocal_proxy_key}' \
 -H 'Content-Type: application/json' \
--d '{}'
+-H 'BT-API-KEY: {backend_application_key}' \
+-d '{
+   "card": {
+     "cvv":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: '\''$.data.cvc'\'' }}",
+     "expiration_month":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746| json: '\''$.data.expiration_month'\'' }}",
+     "expiration_year":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: '\''$.data.expiration_year'\'' }}",
+     "holder_name": "John Doe",
+     "number":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: '\''$.data.number'\'' }}"
+   },
+   "country": "US",
+   "payer": {
+     "document": "1234567890",
+     "email": "john.doe@email.com",
+     "name": "John Doe"
+   }
+}'
 ```
 
 > ⚠️ Make sure to replace the keys above with the appropriated values.

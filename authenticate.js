@@ -25,21 +25,25 @@ module.exports = async (req) => {
     const { body, headers } = args;
 
     // headers and configuration are case-sensitive
-    const xLogin = headers['X-Login'];
-    const date = headers['X-Date'];
+    const xLogin = headers['x-login'];
+    const date = headers['x-date'];
     const secretKey = configuration.DLOCAL_SECRET_KEY;
 
     const jsonBody = body && stringify(body);
 
     const signature = calculateSignature(xLogin, date, secretKey, jsonBody);
 
-    return {
+    const req2 = {
       body: jsonBody,
       headers: {
         ...headers,
         Authorization: signature,
       },
     };
+
+    console.log(req2);
+
+    return req2;
   } catch (error) {
     throw new CustomHttpResponseError({
       status: 500,
