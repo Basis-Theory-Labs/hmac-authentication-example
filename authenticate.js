@@ -22,9 +22,17 @@ function calculateSignature(xLogin, date, secretKey, jsonBody) {
 module.exports = async (req) => {
   try {
     const { args, configuration } = req;
-    const { body, headers } = args;
+    const { body, headers: _headers } = args;
 
-    // headers and configuration are case-sensitive
+    // make headers lowercase to ease the access
+    const headers = Object.entries(_headers).reduce(
+      (obj, [key, value]) => ({
+        ...obj,
+        [key.toLowerCase()]: value,
+      }),
+      {}
+    );
+
     const xLogin = headers['x-login'];
     const date = headers['x-date'];
     const secretKey = configuration.DLOCAL_SECRET_KEY;
@@ -36,7 +44,7 @@ module.exports = async (req) => {
     return {
       body: jsonBody,
       headers: {
-        ...headers,
+        ..._headers,
         Authorization: signature,
       },
     };
