@@ -6,7 +6,7 @@ const stringify = require('json-stable-stringify');
 
 const authorizationScheme = 'V2-HMAC-SHA256';
 
-function calculateSignatureCrypto(xLogin, date, secretKey, jsonBody) {
+function calculateSignature(xLogin, date, secretKey, jsonBody) {
   let message = xLogin + date;
   if (jsonBody) {
     message += jsonBody;
@@ -31,12 +31,7 @@ module.exports = async (req) => {
 
     const jsonBody = body && stringify(body);
 
-    const signature = calculateSignatureCrypto(
-      xLogin,
-      date,
-      secretKey,
-      jsonBody
-    );
+    const signature = calculateSignature(xLogin, date, secretKey, jsonBody);
 
     return {
       body: jsonBody,
