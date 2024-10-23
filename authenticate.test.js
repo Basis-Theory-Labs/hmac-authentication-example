@@ -1,23 +1,20 @@
-const forge = require("node-forge");
-const authenticate = require("./authenticate");
+const authenticate = require('./authenticate');
 
-describe("authenticate", () => {
-  test("should add authentication headers", async () => {
+describe('authenticate', () => {
+  test('should add Authentication header', async () => {
     const { headers } = await authenticate({
       args: {
         headers: {},
         body: {
-          foo: "bar",
+          foo: 'bar',
         },
       },
       configuration: {
-        DESTINATION_PUBLIC_KEY: "2P6GBSQ8ZTZLP3MZ98SZ",
-        DESTINATION_PRIVATE_KEY: "aGMarItuqNYd7P+F232oLvfYHnTObbun91Y0l6/aZ28=",
+        DLOCAL_SECRET_KEY: '2P6GBSQ8ZTZLP3MZ98SZ',
       },
     });
-
-    expect(headers).toHaveProperty("X-Client-Key", "2P6GBSQ8ZTZLP3MZ98SZ");
-    expect(headers).toHaveProperty("X-Date");
-    expect(headers).toHaveProperty("Authorization");
+    expect(headers.Authorization).toMatch(
+      /^V2-HMAC-SHA256, Signature:\s[a-z0-9]{64}$/gu
+    );
   });
 });

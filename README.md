@@ -17,10 +17,9 @@ Follow the steps below to create a new Proxy:
 
     ```terraform
     # Basis Theory Management Application Key
-    management_api_key = "key_W8wA8CmcbwXxJsomxeWHVy"
-    # Destination API keys
-    destination_public_key = "2P6GBSQ8ZTZLP3MZ98SZ"
-    destination_private_key = "aGMarItuqNYd7P+F232oLvfYHnTObbun91Y0l6/aZ28="   
+    bt_management_api_key = "key_W8wA8CmcbwXxJsomxeWHVy"
+    # Destination API key
+    dlocal_secret_key     = "12345678910abcdefg"   
     ```
 
 3. Initialize Terraform:
@@ -38,7 +37,7 @@ Follow the steps below to create a new Proxy:
 Using the outputs from Terraform, you can make a request to the Proxy:
 
 ```curl
-curl -L 'https://api.basistheory.com/proxy?bt-proxy-key={hmac_proxy_key}' \
+curl -L 'https://api.basistheory.com/proxy?bt-proxy-key={dlocal_proxy_key}' \
 -H 'BT-API-KEY: {backend_application_key}' \
 -H 'Content-Type: application/json' \
 -d '{}'

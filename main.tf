@@ -2,17 +2,16 @@ terraform {
   required_providers {
     basistheory = {
       source  = "basis-theory/basistheory"
-      version = ">= 0.8.0"
+      version = ">= 2.2.0"
     }
   }
 }
 
-variable "management_api_key" {}
-variable "destination_public_key" {}
-variable "destination_private_key" {}
+variable "bt_management_api_key" {}
+variable "dlocal_secret_key" {}
 
 provider "basistheory" {
-  api_key = var.management_api_key
+  api_key = var.bt_management_api_key
 }
 
 resource "basistheory_application" "backend_application" {
@@ -29,29 +28,32 @@ resource "basistheory_application" "backend_application" {
   }
 }
 
+resource "basistheory_application_key" "backend_application_key" {
+  application_id = basistheory_application.backend_application.id
+}
 
-resource "basistheory_proxy" "hmac_proxy" {
-  name               = "HMAC Proxy"
-  destination_url    = "https://echo.basistheory.com/anything" # replace this with the destination API url
+
+resource "basistheory_proxy" "dlocal_proxy" {
+  name               = "dLocal Proxy"
+  destination_url    = "https://sandbox.dlocal.com/"
   request_transform = {
     code = file("./authenticate.js")
   }
-  configuration = {
-    DESTINATION_PUBLIC_KEY = var.destination_public_key
-    DESTINATION_PRIVATE_KEY = var.destination_private_key
-  }
   require_auth = true
+  configuration = {
+    DLOCAL_SECRET_KEY = var.dlocal_secret_key
+  }
 }
 
 ## OUTPUTS
-output "hmac_proxy_key" {
-  value       = basistheory_proxy.hmac_proxy.key
-  description = "HMAC Proxy Key"
+output "dlocal_proxy_key" {
+  value       = basistheory_proxy.dlocal_proxy.key
+  description = "dLocal Proxy Key"
   sensitive   = true
 }
 
 output "backend_application_key" {
-  value       = basistheory_application.backend_application.key
+  value       = basistheory_application_key.backend_application_key.key
   description = "Backend Application Key"
   sensitive   = true
 }

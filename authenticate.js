@@ -1,49 +1,62 @@
-const forge = require("node-forge");
+const crypto = require('crypto');
+const {
+  CustomHttpResponseError,
+} = require('@basis-theory/basis-theory-reactor-formulas-sdk-js');
+const stringify = require('json-stable-stringify');
 
-const authorizationScheme = "V1-HMAC-SHA256";
+const authorizationScheme = 'V2-HMAC-SHA256';
 
-function computeHash(message, base64key) {
-  const key = forge.util.decode64(base64key);
-  const hmac = forge.hmac.create();
-  hmac.start("sha256", key);
-  hmac.update(message);
-  return forge.util.encode64(hmac.digest().bytes());
+function calculateSignatureCrypto(xLogin, date, secretKey, jsonBody) {
+  let message = xLogin + date;
+  if (jsonBody) {
+    message += jsonBody;
+  }
+
+  const hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update(message, 'utf-8');
+  const signature = hmac.digest('hex');
+
+  return `${authorizationScheme}, Signature: ${signature}`;
 }
 
-const createAuthHeader = (publicKey, date, privateKey, bodyJ) => {
-  const payloadToSign = publicKey + date + bodyJ;
-  const computedSignature = computeHash(payloadToSign, privateKey);
-  return `${authorizationScheme}, Signature: ${computedSignature}`;
-};
-
-const createAuthenticationHeaders = ({ jsonBody, publicKey, privateKey }) => {
-  const date = new Date().toISOString();
-  const authHeader = createAuthHeader(publicKey, date, privateKey, jsonBody);
-  return {
-    "X-Client-Key": publicKey,
-    "X-Date": date,
-    Authorization: authHeader,
-  };
-};
-
 module.exports = async (req) => {
-  const { args, configuration } = req;
-  const { body, headers, method, path, query } = args;
-  const { DESTINATION_PUBLIC_KEY, DESTINATION_PRIVATE_KEY } = configuration;
+  try {
+    const { args, configuration } = req;
+    const { body, headers } = args;
 
-  const jsonBody = JSON.stringify(body);
+    // headers and configuration are case-sensitive
+    const xLogin = headers['X-Login'];
+    const date = headers['X-Date'];
+    const secretKey = configuration.DLOCAL_SECRET_KEY;
 
-  const authenticationHeaders = createAuthenticationHeaders({
-    jsonBody,
-    publicKey: DESTINATION_PUBLIC_KEY,
-    privateKey: DESTINATION_PRIVATE_KEY,
-  });
+    const jsonBody = body && stringify(body);
 
-  return {
-    body,
-    headers: {
-      ...headers,
-      ...authenticationHeaders,
-    },
-  };
+    const signature = calculateSignatureCrypto(
+      xLogin,
+      date,
+      secretKey,
+      jsonBody
+    );
+
+    return {
+      body: jsonBody,
+      headers: {
+        ...headers,
+        Authorization: signature,
+      },
+    };
+  } catch (error) {
+    throw new CustomHttpResponseError({
+      status: 500,
+      body: {
+        proxy_request_transform_error: {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          data: error.data,
+          stack: error.stack,
+        },
+      },
+    });
+  }
 };
