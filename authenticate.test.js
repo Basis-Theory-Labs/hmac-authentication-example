@@ -5,20 +5,22 @@ describe('authenticate', () => {
     const { headers } = await authenticate({
       args: {
         headers: {
-          // making sure headers casing doesn't matter
-          'x-DaTe': '2024-10-30T20:05:21.188Z',
-          'X-lOgIn': '0123456789',
+          'X-Date': 'Wed, 27 Nov 2024 17:18:20 GMT',
+          'Content-Length': '123',
+          'Content-Type': 'application/json',
+          'BT-TRACE-ID': 'asd123',
         },
         body: {
           foo: 'bar',
         },
       },
       configuration: {
-        DLOCAL_SECRET_KEY: 'ABCDEFG123456789',
+        INGO_USERNAME: 'BasisTheory',
+        INGO_SECRET: 'ABCDEFG123456789',
       },
     });
     expect(headers.Authorization).toStrictEqual(
-      'V2-HMAC-SHA256, Signature: b809e7e2e21f895863997bb2bb3751f02906aceac4fdc6789c29646b7aff9a85'
+      `hmac username="BasisTheory", algorithm="hmac-sha512", headers="request-line x-date content-sha512 content-length content-type BT-TRACE-ID Accept User-Agent Cache-Control", signature="N160AFUQsotsE1bu7o1j/jl5Km9bAsrWJ/OtWkciNStRkQ4fWON62lRV4ozaKzitVSS0cT6bBzjDYoed2ljqmw=="`
     );
   });
 });

@@ -19,7 +19,8 @@ Follow the steps below to create a new Proxy:
     # Basis Theory Management Application Key
     bt_management_api_key = "key_W8wA8CmcbwXxJsomxeWHVy"
     # Destination API key
-    dlocal_secret_key     = "12345678910abcdefg"   
+    ingo_username = "merchant1"
+    ingo_secret     = "12345678910abcdefg"   
     ```
 
 3. Initialize Terraform:
@@ -34,31 +35,29 @@ Follow the steps below to create a new Proxy:
     terraform apply
     ```
 
-Using the outputs from Terraform, you can make a request to dLocal to [save a card](https://docs.dlocal.com/reference/create-a-card) using an existing token (e.g., `dca501d0-993d-4e8f-a6aa-219e3a531746`):
+Using the outputs from Terraform, you can make a request to IngoPayments to [verify a card](https://developer-payments.ingomoney.com/en/ingopay-api/gateway/verify) using an existing token (e.g., `dca501d0-993d-4e8f-a6aa-219e3a531746`):
 
 ```curl
-curl -L 'https://api.basistheory.com/proxy/secure_cards' \
--H 'X-Login: 123456789' \
--H 'X-Trans-Key: 123456789a' \
--H 'X-Version: 2.1' \
--H 'X-Date: 2024-10-22T20:08:49.744Z' \
--H 'BT-PROXY-KEY: {dlocal_proxy_key}' \
+curl -L 'https://api.basistheory.com/proxy/gateway/verify' \
+-H 'BT-PROXY-KEY: {ingo_proxy_key}' \
 -H 'Content-Type: application/json' \
 -H 'BT-API-KEY: {backend_application_key}' \
 -d '{
-   "card": {
-     "cvv":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: '\''$.data.cvc'\'' }}",
-     "expiration_month":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746| json: '\''$.data.expiration_month'\'' }}",
-     "expiration_year":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: '\''$.data.expiration_year'\'' }}",
-     "holder_name": "John Doe",
-     "number":"{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: '\''$.data.number'\'' }}"
-   },
-   "country": "US",
-   "payer": {
-     "document": "1234567890",
-     "email": "john.doe@email.com",
-     "name": "John Doe"
-   }
+  "participant_id": 00000,
+  "account_type": "CA",
+  "recipient_first_name": "Tom",
+  "recipient_last_name": "Smith",
+  "account": "{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: \"$.data.number\" }}",
+  "expiration_date": "{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: \"$.data\" | card_exp: \"YYMM\" }}",
+  "cvv": "{{ token: dca501d0-993d-4e8f-a6aa-219e3a531746 | json: \"$.data.cvc\" }}",
+  "recipient_address1": "123 Main St.",
+  "recipient_city": "Smallville",
+  "recipient_state": "TX",
+  "recipient_zip": "93245",
+  "recipient_phone": "8015555555",
+  "participant_unique_id1": "0001",
+  "timestamp": 1579291169,
+  "version": "11"
 }'
 ```
 

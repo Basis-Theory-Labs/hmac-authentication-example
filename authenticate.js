@@ -4,48 +4,83 @@ const {
 } = require('@basis-theory/basis-theory-reactor-formulas-sdk-js');
 const stringify = require('json-stable-stringify');
 
-const authorizationScheme = 'V2-HMAC-SHA256';
-
-function calculateSignature(xLogin, date, secretKey, jsonBody) {
-  let message = xLogin + date;
-  if (jsonBody) {
-    message += jsonBody;
-  }
-
-  const hmac = crypto.createHmac('sha256', secretKey);
-  hmac.update(message, 'utf-8');
-  const signature = hmac.digest('hex');
-
-  return `${authorizationScheme}, Signature: ${signature}`;
-}
-
 module.exports = async (req) => {
   try {
     const { args, configuration } = req;
-    const { body, headers: _headers } = args;
-
-    // make headers lowercase to ease the access
-    const headers = Object.entries(_headers).reduce(
-      (obj, [key, value]) => ({
-        ...obj,
-        [key.toLowerCase()]: value,
-      }),
-      {}
-    );
-
-    const xLogin = headers['x-login'];
-    const date = headers['x-date'];
-    const secretKey = configuration.DLOCAL_SECRET_KEY;
+    const { body, headers: _headers, method, path, query } = args;
 
     const jsonBody = body && stringify(body);
 
-    const signature = calculateSignature(xLogin, date, secretKey, jsonBody);
+    const date = new Date().toUTCString();
+
+    const contentSha512 = crypto
+      .createHash('sha512')
+      .update(jsonBody)
+      .digest('base64');
+
+    // create an explicit headers object
+    // containing only whitelisted headers
+    // (the ones we know won't break authentication)
+    const headers = {
+      // Ingo required headers
+      'x-date': _headers['X-Date'] || date,
+      'content-sha512': contentSha512,
+      'content-length': _headers['Content-Length'],
+      'content-type': _headers['Content-Type'],
+
+      // BT important header
+      'BT-TRACE-ID': _headers['BT-TRACE-ID'],
+
+      // OK Client headers
+      Accept: _headers['Accept'],
+      'User-Agent': _headers['User-Agent'],
+      'Cache-Control': _headers['Cache-Control'],
+
+      // these headers break the authentication - ingo doesn't like them
+      // 'X-Amzn-Trace-Id': _headers['X-Amz-Trace-Id'],
+      // 'Accept-Encoding': _headers['Accept-Encoding'],
+    };
+
+    // can't use all the headers from the client request
+    // const headers = Object.entries(_headers).reduce(
+    //   (obj, [key, value]) => ({
+    //     ...obj,
+    //     [key.toLowerCase()]: value,
+    //   }),
+    //   {
+    //     'content-sha512': contentSha512,
+    //     'x-date': date,
+    //   }
+    // );
+
+    const requestLine = `${method} ${path} HTTP/1.1`;
+
+    const signatureString = Object.entries(headers).reduce(
+      (previous, [key, value]) => `${previous}\n${key}: ${value}`,
+      requestLine
+    );
+
+    const headersString = Object.keys(headers).reduce(
+      (previous, key) => `${previous} ${key}`,
+      'request-line'
+    );
+
+    const signature = crypto
+      .createHmac('sha512', configuration.INGO_SECRET)
+      .update(signatureString)
+      .digest('base64');
+
+    const authorization = `hmac username="${configuration.INGO_USERNAME}", algorithm="hmac-sha512", headers="${headersString}", signature="${signature}"`;
+
+    // console.log(headers);
+    // console.log(_headers);
+    // console.log(authorization);
 
     return {
       body: jsonBody,
       headers: {
-        ..._headers,
-        Authorization: signature,
+        ...headers,
+        Authorization: authorization,
       },
     };
   } catch (error) {
