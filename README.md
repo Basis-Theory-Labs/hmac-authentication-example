@@ -17,10 +17,9 @@ Follow the steps below to create a new Proxy:
 
     ```terraform
     # Basis Theory Management Application Key
-    management_api_key = "key_W8wA8CmcbwXxJsomxeWHVy"
-    # Destination API keys
-    destination_public_key = "2P6GBSQ8ZTZLP3MZ98SZ"
-    destination_private_key = "aGMarItuqNYd7P+F232oLvfYHnTObbun91Y0l6/aZ28="   
+    management_api_key = "bt_key_goes_here"
+    # Pixxles API keys
+    signature_key = "Pixxles_signature_key_goes_here"  
     ```
 
 3. Initialize Terraform:

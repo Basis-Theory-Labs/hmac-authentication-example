@@ -2,22 +2,16 @@ const forge = require("node-forge");
 const authenticate = require("./authenticate");
 
 describe("authenticate", () => {
-  test("should add authentication headers", async () => {
-    const { headers } = await authenticate({
+  test("Should add signature parameter", async () => {
+    const { body } = await authenticate({
       args: {
         headers: {},
-        body: {
-          foo: "bar",
-        },
+        body: "foo=bar&bankID=9876545"
       },
       configuration: {
-        DESTINATION_PUBLIC_KEY: "2P6GBSQ8ZTZLP3MZ98SZ",
-        DESTINATION_PRIVATE_KEY: "aGMarItuqNYd7P+F232oLvfYHnTObbun91Y0l6/aZ28=",
+        SIGNATURE_KEY: "abc123",
       },
     });
-
-    expect(headers).toHaveProperty("X-Client-Key", "2P6GBSQ8ZTZLP3MZ98SZ");
-    expect(headers).toHaveProperty("X-Date");
-    expect(headers).toHaveProperty("Authorization");
+    expect(body).toContain("signature=11582e4849c86cebba7a6b080a9c05e3f20ea8911a91f41549dd3740b3c211ec8e71460943f400a0191a4c7bfbfecb28ec5a203b67b218ba923ee5e920ef946e")
   });
 });
